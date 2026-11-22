@@ -1,0 +1,80 @@
+import {
+  Injectable,
+  UnauthorizedException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+
+export type RoleCode =
+  | 'SUPER_ADMIN'
+  | 'FINANCE_ADMIN'
+  | 'ACCOUNTANT'
+  | 'FINANCE_MANAGER'
+  | 'AP_OFFICER'
+  | 'AR_OFFICER'
+  | 'AUDITOR';
+
+export interface LedgerUser {
+  id: string;
+  email: string | null;
+  name: string | null;
+  role: RoleCode | null;
+}
+
+@Injectable()
+export class AuthService {
+  private readonly supabase: SupabaseClient;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
+  ) {
+    const url = this.config.get<string>('SUPABASE_URL');
+    const key = this.config.get<string>('SUPABASE_PUBLISHABLE_KEY');
+
+    if (!url || !key || key === 'ISI_PUBLISHABLE_KEY_ASLI') {
+      throw new Error('Konfigurasi Supabase Auth belum lengkap.');
+    }
+
+    this.supabase = createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+  }
+
+  async authenticate(accessToken: string): Promise<LedgerUser> {
+    const { data, error } = await this.supabase.auth.getUser(accessToken);
+
+    if (error && error.status && error.status >= 500) {
+      throw new ServiceUnavailableException(
+        'Layanan autentikasi tidak tersedia.',
+      );
+    }
+
+    if (error || !data.user) {
+      throw new UnauthorizedException('Sesi tidak valid atau telah berakhir.');
+    }
+
+    const roles = await this.prisma.$queryRaw<Array<{ role: RoleCode }>>`
+      SELECT role
+      FROM ledgercore_security.user_roles
+      WHERE user_id = CAST(${data.user.id} AS UUID)
+        AND is_active = TRUE
+      LIMIT 1
+    `;
+
+    const fullName = data.user.user_metadata?.full_name;
+
+    return {
+      id: data.user.id,
+      email: data.user.email ?? null,
+      name: typeof fullName === 'string' ? fullName : null,
+      role: roles[0]?.role ?? null,
+    };
+  }
+}

@@ -1,0 +1,98 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+const publicRoutes = new Set([
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+]);
+
+export async function proxy(request: NextRequest) {
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+
+          response = NextResponse.next({ request });
+
+          cookiesToSet.forEach(
+            ({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            },
+          );
+        },
+      },
+    },
+  );
+
+  const {
+    data: { claims },
+    error,
+  } = await supabase.auth.getClaims();
+
+  const pathname = request.nextUrl.pathname;
+  const isPublic = publicRoutes.has(pathname);
+
+  if ((error || !claims) && !isPublic) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+
+    const redirectResponse = NextResponse.redirect(url);
+
+    response.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+
+    redirectResponse.headers.set(
+      "Cache-Control",
+      "private, no-store",
+    );
+
+    return redirectResponse;
+  }
+
+  response.headers.set(
+    "Cache-Control",
+    "private, no-store",
+  );
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+    "/dashboard/:path*",
+    "/accounts/:path*",
+    "/approvals/:path*",
+    "/audit-trail/:path*",
+    "/expenses/:path*",
+    "/fiscal-periods/:path*",
+    "/invoices/:path*",
+    "/journals/:path*",
+    "/ledger/:path*",
+    "/organizations/:path*",
+    "/payables/:path*",
+    "/receivables/:path*",
+    "/reconciliation/:path*",
+    "/reports/:path*",
+    "/roles/:path*",
+    "/settings/:path*",
+    "/users/:path*",
+  ],
+};
