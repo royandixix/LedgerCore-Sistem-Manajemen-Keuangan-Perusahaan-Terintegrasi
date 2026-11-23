@@ -1,0 +1,14 @@
+[
+  {
+    "file": "apps/web/src/app/(workspace)/organizations/page.tsx",
+    "existed": true
+  },
+  {
+    "file": "apps/web/src/features/organizations/api/organizations.api.ts",
+    "existed": true
+  },
+  {
+    "file": "apps/web/src/features/organizations/components/organizations-overview.tsx",
+    "existed": false
+  }
+]

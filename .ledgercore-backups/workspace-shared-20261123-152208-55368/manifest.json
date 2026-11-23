@@ -1,0 +1,21 @@
+[
+  "apps/web/src/components/dashboard/ledgercore-volt-dashboard.tsx",
+  "apps/web/src/app/(workspace)/layout.tsx",
+  "apps/web/src/app/(workspace)/dashboard/page.tsx",
+  "apps/web/src/app/(workspace)/accounts/page.tsx",
+  "apps/web/src/app/(workspace)/approvals/page.tsx",
+  "apps/web/src/app/(workspace)/audit-trail/page.tsx",
+  "apps/web/src/app/(workspace)/expenses/page.tsx",
+  "apps/web/src/app/(workspace)/fiscal-periods/page.tsx",
+  "apps/web/src/app/(workspace)/invoices/page.tsx",
+  "apps/web/src/app/(workspace)/journals/page.tsx",
+  "apps/web/src/app/(workspace)/ledger/page.tsx",
+  "apps/web/src/app/(workspace)/organizations/page.tsx",
+  "apps/web/src/app/(workspace)/payables/page.tsx",
+  "apps/web/src/app/(workspace)/receivables/page.tsx",
+  "apps/web/src/app/(workspace)/reconciliation/page.tsx",
+  "apps/web/src/app/(workspace)/reports/page.tsx",
+  "apps/web/src/app/(workspace)/roles/page.tsx",
+  "apps/web/src/app/(workspace)/settings/page.tsx",
+  "apps/web/src/app/(workspace)/users/page.tsx"
+]
