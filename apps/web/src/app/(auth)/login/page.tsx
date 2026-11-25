@@ -11,7 +11,7 @@ import {
   ShieldCheck,
   LoaderCircle,
 } from "lucide-react";
-import { createClient } from "../../../lib/supabase/client";
+import { loginWithPassword } from "./actions";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -27,17 +27,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-
-      const { error: authError } = await supabase.auth.signInWithPassword({
+      const result = await loginWithPassword({
         email: email.trim(),
         password,
       });
 
-      if (authError) {
-        setError(
-          "Gagal masuk. Periksa email, password, dan status verifikasi akun.",
-        );
+      if (!result.ok) {
+        setError(result.message);
         return;
       }
 

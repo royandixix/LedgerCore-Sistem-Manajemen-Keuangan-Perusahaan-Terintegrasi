@@ -65,7 +65,7 @@ async function WorkspaceContent({ children }: { children: ReactNode }) {
 
   if (response.status === 401) redirect("/login");
   if (response.status === 403) return <StatusScreen title="Akses ditolak" description="Role akun belum diizinkan mengakses dashboard." />;
-  if (!response.ok) return <StatusScreen title="Layanan belum tersedia" description="Backend mengalami kendala saat memverifikasi akses." />;
+  if (!response.ok) return <StatusScreen title="Layanan belum tersedia" description={`Verifikasi akses gagal (HTTP ${response.status}). Periksa log backend NestJS.`} />;
 
   let payload: unknown;
   try {
