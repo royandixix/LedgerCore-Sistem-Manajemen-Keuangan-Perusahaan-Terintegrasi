@@ -143,12 +143,210 @@ export function UsersWorkspace({
   const hasFilters = Boolean(search.trim() || filter !== 'all' || roleFilter !== 'all' || sort !== 'recent');
   const available = !error && organizations.length > 0;
 
-  function open(next: Mode) {
-    setMode(next);
-    setEmail('');
-    setUid('');
-    setOrganizationId(organizations[0]?.id ?? '');
-    setRole('ACCOUNTANT');
+  async function open(next: Mode) {
+    if (busy || !available) return;
+
+    setBusy(true);
+
+    const isInvite = next === 'invite';
+
+    try {
+      const { default: Swal } = await import('sweetalert2');
+
+      const decision = await Swal.fire({
+        title: isInvite ? 'Undang Pengguna' : 'Tambah Anggota',
+        icon: 'info',
+
+        html: `
+          <div class="lc-users-create-grid">
+            <label for="lc-member-identity">
+              ${isInvite ? 'Email pengguna' : 'Supabase User UID'}
+            </label>
+            <input
+              id="lc-member-identity"
+              type="${isInvite ? 'email' : 'text'}"
+              placeholder="${isInvite ? 'nama@perusahaan.com' : 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'}"
+              autocomplete="off"
+              spellcheck="false"
+            />
+
+            <label for="lc-member-org">Organisasi</label>
+            <select id="lc-member-org"></select>
+
+            <label for="lc-member-role">Role organisasi</label>
+            <select id="lc-member-role"></select>
+
+            <p>
+              SUPER_ADMIN global tidak dapat diberikan
+              melalui formulir ini.
+            </p>
+          </div>
+        `,
+
+        showCancelButton: true,
+        confirmButtonText: isInvite
+          ? 'Kirim Undangan'
+          : 'Tambah Anggota',
+        cancelButtonText: 'Batal',
+        reverseButtons: true,
+        focusConfirm: false,
+        buttonsStyling: true,
+        showLoaderOnConfirm: true,
+
+        allowOutsideClick: () => !Swal.isLoading(),
+        allowEscapeKey: () => !Swal.isLoading(),
+
+        customClass: {
+          popup: 'lc-users-native-swal lc-users-create-dialog',
+          confirmButton: 'lc-users-native-edit',
+          cancelButton: 'lc-users-native-cancel',
+        },
+
+        showClass: {
+          popup: 'lc-users-create-enter',
+        },
+
+        hideClass: {
+          popup: 'lc-users-create-exit',
+        },
+
+        didOpen: (popup) => {
+          const identity =
+            popup.querySelector<HTMLInputElement>(
+              '#lc-member-identity'
+            );
+
+          const orgSelect =
+            popup.querySelector<HTMLSelectElement>(
+              '#lc-member-org'
+            );
+
+          const roleSelect =
+            popup.querySelector<HTMLSelectElement>(
+              '#lc-member-role'
+            );
+
+          if (orgSelect) {
+            organizations.forEach((org) => {
+              orgSelect.add(new Option(org.name, org.id));
+            });
+          }
+
+          if (roleSelect) {
+            MEMBER_ROLES.forEach((key) => {
+              roleSelect.add(new Option(names[key], key));
+            });
+
+            roleSelect.value = 'ACCOUNTANT';
+          }
+
+          identity?.focus();
+        },
+
+        preConfirm: async () => {
+          const popup = Swal.getPopup();
+
+          const identityInput =
+            popup?.querySelector<HTMLInputElement>(
+              '#lc-member-identity'
+            );
+
+          const orgInput =
+            popup?.querySelector<HTMLSelectElement>(
+              '#lc-member-org'
+            );
+
+          const roleInput =
+            popup?.querySelector<HTMLSelectElement>(
+              '#lc-member-role'
+            );
+
+          const identifier =
+            identityInput?.value.trim() ?? '';
+
+          const orgId = orgInput?.value ?? '';
+
+          const selectedRole = MEMBER_ROLES.find(
+            (key) => key === roleInput?.value
+          );
+
+          if (
+            isInvite &&
+            (!identifier || !identityInput?.checkValidity())
+          ) {
+            Swal.showValidationMessage(
+              'Masukkan alamat email yang valid.'
+            );
+            return false;
+          }
+
+          const uuidPattern =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+          if (
+            !isInvite &&
+            !uuidPattern.test(identifier)
+          ) {
+            Swal.showValidationMessage(
+              'Masukkan UID Supabase yang valid (UUID).'
+            );
+            return false;
+          }
+
+          if (
+            !organizations.some((org) => org.id === orgId) ||
+            !selectedRole
+          ) {
+            Swal.showValidationMessage(
+              'Pilih organisasi dan role yang tersedia.'
+            );
+            return false;
+          }
+
+          try {
+            const result = await manageUserAction(
+              isInvite ? 'invite' : 'add',
+              {
+                email: isInvite ? identifier : '',
+                authUserId: isInvite ? '' : identifier,
+                organizationId: orgId,
+                role: selectedRole,
+              }
+            );
+
+            if (!result.ok) {
+              Swal.showValidationMessage(result.message);
+              return false;
+            }
+
+            return result.message;
+          } catch {
+            Swal.showValidationMessage(
+              'Tidak dapat terhubung ke API. Coba lagi.'
+            );
+            return false;
+          }
+        },
+      });
+
+      if (decision.isConfirmed) {
+        void toast(
+          'success',
+          typeof decision.value === 'string'
+            ? decision.value
+            : 'Keanggotaan berhasil diproses.'
+        );
+
+        startTransition(() => router.refresh());
+      }
+    } catch {
+      await toast(
+        'error',
+        'Dialog tidak dapat ditampilkan. Coba lagi.'
+      );
+    } finally {
+      setBusy(false);
+    }
   }
 
   function close() {
@@ -406,7 +604,7 @@ export function UsersWorkspace({
         ))}
       </section>
 
-      <section className="overflow-hidden rounded-[24px] border border-[#e2e9f2] bg-white shadow-[0_8px_30px_rgba(30,48,86,.045)]">
+      <section data-ledgercore-directory="minimal-v9" className="overflow-hidden rounded-[24px] border border-[#e2e9f2] bg-white shadow-[0_8px_30px_rgba(30,48,86,.045)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-5 sm:px-6">
           <div>
             <div className="flex items-center gap-2"><span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf4ff] text-sky-600"><Users size={17} /></span><h2 className="text-[16px] font-extrabold tracking-tight text-[#20304b]">Direktori Pengguna</h2></div>
