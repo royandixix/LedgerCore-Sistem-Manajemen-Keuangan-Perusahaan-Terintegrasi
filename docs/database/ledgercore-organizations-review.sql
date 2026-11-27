@@ -16,7 +16,7 @@ CREATE TABLE "organizations" (
     CONSTRAINT "organizations_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- CreateTable 
 CREATE TABLE "organization_members" (
     "id" UUID NOT NULL,
     "organization_id" UUID NOT NULL,
