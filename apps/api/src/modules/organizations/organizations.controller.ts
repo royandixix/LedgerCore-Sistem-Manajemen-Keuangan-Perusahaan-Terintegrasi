@@ -10,10 +10,12 @@ import {
 } from '@nestjs/common';
 
 import { Roles } from '../../common/decorators/permissions.decorator.js';
+import { RequiredPermissions } from '../../common/access/access.decorator.js';
 import { AuthGuard } from '../../common/guards/auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { OrganizationsService } from './organizations.service.js';
 
+@RequiredPermissions('organizations.manage')
 @Controller('organizations')
 @UseGuards(AuthGuard, PermissionsGuard)
 export class OrganizationsController {

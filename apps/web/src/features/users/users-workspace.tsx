@@ -25,13 +25,14 @@ const names: Record<MemberRole, string> = {
   AUDITOR: 'Auditor',
 };
 
+/* LEDGERCORE USERS MONO PALETTE V10 */
 const roleTone: Record<MemberRole, string> = {
-  FINANCE_ADMIN: 'bg-violet-50 text-violet-700 ring-violet-100',
-  ACCOUNTANT: 'bg-sky-50 text-sky-700 ring-sky-100',
-  FINANCE_MANAGER: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
-  AP_OFFICER: 'bg-amber-50 text-amber-700 ring-amber-100',
-  AR_OFFICER: 'bg-teal-50 text-teal-700 ring-teal-100',
-  AUDITOR: 'bg-fuchsia-50 text-fuchsia-700 ring-fuchsia-100',
+  FINANCE_ADMIN: 'bg-slate-100 text-slate-700 ring-slate-200',
+  ACCOUNTANT: 'bg-slate-100 text-slate-700 ring-slate-200',
+  FINANCE_MANAGER: 'bg-slate-100 text-slate-700 ring-slate-200',
+  AP_OFFICER: 'bg-slate-100 text-slate-700 ring-slate-200',
+  AR_OFFICER: 'bg-slate-100 text-slate-700 ring-slate-200',
+  AUDITOR: 'bg-slate-100 text-slate-700 ring-slate-200',
 };
 
 
@@ -45,12 +46,12 @@ const roleIcons: Record<MemberRole, typeof ShieldCheck> = {
 };
 
 const roleAvatarTone: Record<MemberRole, string> = {
-  FINANCE_ADMIN: 'bg-violet-100 text-violet-700',
-  ACCOUNTANT: 'bg-sky-100 text-sky-700',
-  FINANCE_MANAGER: 'bg-indigo-100 text-indigo-700',
-  AP_OFFICER: 'bg-amber-100 text-amber-700',
-  AR_OFFICER: 'bg-teal-100 text-teal-700',
-  AUDITOR: 'bg-fuchsia-100 text-fuchsia-700',
+  FINANCE_ADMIN: 'bg-slate-100 text-slate-600',
+  ACCOUNTANT: 'bg-slate-100 text-slate-600',
+  FINANCE_MANAGER: 'bg-slate-100 text-slate-600',
+  AP_OFFICER: 'bg-slate-100 text-slate-600',
+  AR_OFFICER: 'bg-slate-100 text-slate-600',
+  AUDITOR: 'bg-slate-100 text-slate-600',
 };
 
 function memberRoleLabel(role: UserMember['role']) {
@@ -498,29 +499,31 @@ export function UsersWorkspace({
       <div className="flex items-center justify-end gap-1.5">
         <button type="button" disabled={disabled} onClick={() => void editRole(item)}
           aria-label={`Edit role ${item.email}`} title="Edit role anggota"
-          className="group/action inline-flex h-9 w-9 items-center justify-center rounded-[10px] bg-sky-50/80 text-sky-700 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sky-100 hover:shadow-[0_5px_15px_rgba(3,105,161,.16)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:cursor-not-allowed disabled:opacity-40">
+          className="group/action inline-flex h-9 w-9 items-center justify-center rounded-none border border-slate-200 bg-slate-50 text-slate-600 transition-colors duration-150 hover:bg-slate-200 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-40">
           <SquarePen size={17} strokeWidth={1.8} className="transition-transform duration-200 group-hover/action:scale-110" />
         </button>
         <button type="button" disabled={disabled} onClick={() => void remove(item)}
           aria-label={`Cabut keanggotaan ${item.email}`} title="Cabut keanggotaan (bukan hapus akun)"
-          className="group/action inline-flex h-9 w-9 items-center justify-center rounded-[10px] bg-rose-50/80 text-rose-600 transition-all duration-200 hover:-translate-y-0.5 hover:bg-rose-100 hover:shadow-[0_5px_15px_rgba(190,24,93,.15)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 disabled:cursor-not-allowed disabled:opacity-40">
+          className="group/action inline-flex h-9 w-9 items-center justify-center rounded-none border border-slate-200 bg-slate-50 text-slate-600 transition-colors duration-150 hover:bg-slate-200 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-40">
           <UserRoundX size={17} strokeWidth={1.8} className="transition-transform duration-200 group-hover/action:scale-110" />
         </button>
       </div>
     );
   }
   function status(item: UserMember) {
+    const label = item.protected
+      ? 'Dilindungi'
+      : item.banned
+        ? 'Diblokir'
+        : 'Anggota';
+
     return (
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${item.protected
-        ? 'bg-violet-50 text-violet-700'
-        : item.banned ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${item.protected
-          ? 'bg-violet-500' : item.banned ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-        {item.protected ? 'Dilindungi' : item.banned ? 'Diblokir' : 'Anggota'}
+      <span className="inline-flex items-center gap-1.5 rounded-none border border-slate-200 bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-700">
+        <span className="h-1.5 w-1.5 rounded-full bg-slate-500" />
+        {label}
       </span>
     );
   }
-
 
   // Role symbols replace fake initials; no profile photos are fabricated.
   function avatar(item: UserMember, size = 'h-10 w-10') {
@@ -546,7 +549,7 @@ export function UsersWorkspace({
     return (
       <button type="button" onClick={() => void copyUid(item.authUserId)}
         title="Salin UID lengkap" aria-label={`Salin UID ${item.email}`}
-        className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold text-sky-700 transition hover:bg-sky-50 hover:text-sky-900 focus-visible:outline-2 focus-visible:outline-sky-500">
+        className="inline-flex items-center gap-1 rounded-none px-1.5 py-1 text-[10px] font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-slate-400">
         <Copy size={12} strokeWidth={1.9} /> Salin ID
       </button>
     );
@@ -607,11 +610,11 @@ export function UsersWorkspace({
       <section data-ledgercore-directory="minimal-v9" className="overflow-hidden rounded-[24px] border border-[#e2e9f2] bg-white shadow-[0_8px_30px_rgba(30,48,86,.045)]">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-5 sm:px-6">
           <div>
-            <div className="flex items-center gap-2"><span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#eaf4ff] text-sky-600"><Users size={17} /></span><h2 className="text-[16px] font-extrabold tracking-tight text-[#20304b]">Direktori Pengguna</h2></div>
+            <div className="flex items-center gap-2"><span className="inline-flex h-8 w-8 items-center justify-center rounded-none bg-slate-100 text-slate-600"><Users size={17} /></span><h2 className="text-[16px] font-extrabold tracking-tight text-[#20304b]">Direktori Pengguna</h2></div>
             <p className="mt-1.5 text-xs text-slate-500">Kelola akses dan keanggotaan tim secara terpusat.</p>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-bold text-slate-600">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" /> {filtered.length} dari {users.length} data
+            <span className="h-2 w-2 rounded-full bg-slate-500" /> {filtered.length} dari {users.length} data
           </span>
         </div>
 

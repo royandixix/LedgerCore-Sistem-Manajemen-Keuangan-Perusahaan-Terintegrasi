@@ -1,30 +1,205 @@
-import Link from "next/link";
-import { ArrowRight, Clock3, ShieldCheck } from "lucide-react";
+import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
+import { createClient } from '../../../lib/supabase/server';
 
-export default function Page() {
+import RolesWorkspace, {
+  type RoleCatalogPayload,
+} from '../../../features/roles/roles-workspace';
+
+function Notice({
+  title,
+  detail,
+}: {
+  title: string;
+  detail: string;
+}) {
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold text-[#8090aa]">LedgerCore / Workspace</p>
-          <h1 className="mt-1 text-[23px] font-bold tracking-tight text-[#29314b]">Role & Permissions</h1>
-        </div>
-        <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-md border border-[#d5ddea] bg-white px-3 py-2 text-xs font-semibold text-[#324361] hover:bg-[#f5f8fc]">
-          Overview <ArrowRight size={15} />
-        </Link>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(260px,.8fr)]">
-        <section className="rounded-lg border border-[#e0e5ed] bg-white p-6 shadow-sm sm:p-8">
-          <div className="inline-flex items-center gap-2 rounded-md bg-[#e4f7ff] px-3 py-2 text-xs font-semibold text-[#147ea5]"><Clock3 size={15} /> Dalam pengembangan</div>
-          <h2 className="mt-5 text-xl font-bold text-[#29324b]">Role & Permissions</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-[#71819b]">Modul ini belum memiliki implementasi bisnis yang lengkap. Tampilan workspace sudah terintegrasi; fungsi dan data asli akan ditambahkan setelah API serta kontrol izin selesai diuji.</p>
-        </section>
-        <aside className="rounded-lg border border-[#e0e5ed] bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-2 text-sm font-bold text-[#29324b]"><ShieldCheck size={17} className="text-[#169d92]" /> Status Modul</div>
-          <p className="mt-3 text-xs leading-6 text-[#7e8ca3]">Navigasi aktif. Data keuangan belum ditampilkan dan operasi bisnis belum diaktifkan pada halaman ini.</p>
-          <Link href="/dashboard" className="mt-5 inline-flex items-center gap-2 text-xs font-semibold text-[#128db6] hover:underline">Kembali ke Dashboard <ArrowRight size={14} /></Link>
-        </aside>
-      </div>
+    <div className="border border-slate-200 bg-white p-7 text-[#293650]">
+      <h1 className="text-xl font-bold">{title}</h1>
+      <p className="mt-2 text-sm leading-6 text-slate-500">
+        {detail}
+      </p>
     </div>
+  );
+}
+
+function validCatalog(
+  value: unknown,
+): value is RoleCatalogPayload {
+  if (!value || typeof value !== 'object') return false;
+
+  const data = value as Partial<RoleCatalogPayload>;
+
+  return (
+    data.version === 'stage6c-v1' &&
+    data.readOnly === true &&
+    Array.isArray(data.permissions) &&
+    data.permissions.every(
+      (p) => typeof p === 'string'
+    ) &&
+    Array.isArray(data.roles) &&
+    data.roles.length === 7 &&
+    data.roles.every(
+      (role) =>
+        role &&
+        typeof role.code === 'string' &&
+        typeof role.label === 'string' &&
+        (
+          role.scope === 'global' ||
+          role.scope === 'organization'
+        ) &&
+        Array.isArray(role.permissions) &&
+        role.permissions.every(
+          (p) => typeof p === 'string'
+        )
+    )
+  );
+}
+
+async function RolesContent() {
+  const supabase = await createClient();
+
+  const {
+    data: claims,
+    error: claimError,
+  } = await supabase.auth.getClaims();
+
+  if (claimError || !claims?.claims) {
+    redirect('/login');
+  }
+
+  const {
+    data,
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error || !data.session?.access_token) {
+    redirect('/login');
+  }
+
+  const api = (
+    process.env.NEXT_PUBLIC_API_URL ??
+    'http://127.0.0.1:4000/api/v1'
+  ).replace(/\/$/, '');
+
+  let response: Response;
+
+  try {
+    response = await fetch(
+      `${api}/auth/permissions/catalog`,
+      {
+        headers: {
+          Authorization: `Bearer ${data.session.access_token}`,
+        },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000),
+      }
+    );
+  } catch {
+    return (
+      <Notice
+        title="Layanan izin belum tersedia"
+        detail="Backend NestJS belum bisa dihubungi. Periksa server API."
+      />
+    );
+  }
+
+  if (response.status === 401) {
+    redirect('/login');
+  }
+
+  if (response.status === 403) {
+    return (
+      <Notice
+        title="Akses ditolak"
+        detail="Matriks hak akses global hanya tersedia untuk Super Administrator."
+      />
+    );
+  }
+
+  if (!response.ok) {
+    return (
+      <Notice
+        title="Tidak dapat memuat matriks"
+        detail={`Backend mengembalikan HTTP ${response.status}.`}
+      />
+    );
+  }
+
+  let payload: unknown;
+
+  try {
+    payload = await response.json();
+  } catch {
+    return (
+      <Notice
+        title="Respons API tidak valid"
+        detail="Format respons backend tidak dapat dibaca."
+      />
+    );
+  }
+
+  if (!validCatalog(payload)) {
+    return (
+      <Notice
+        title="Matriks izin belum sinkron"
+        detail="Format policy backend tidak sesuai dengan versi UI."
+      />
+    );
+  }
+
+  return <RolesWorkspace catalog={payload} />;
+}
+
+
+function RolesLoading() {
+  return (
+    <div
+      role="status"
+      aria-label="Memuat Role dan Permissions"
+      className="animate-pulse space-y-5 pb-10"
+    >
+      <div className="border border-slate-200 bg-white p-6">
+        <div className="h-3 w-36 bg-slate-100" />
+        <div className="mt-4 h-7 w-64 max-w-full bg-slate-200" />
+        <div className="mt-3 h-3 w-full max-w-md bg-slate-100" />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {[1, 2, 3].map((item) => (
+          <div
+            key={item}
+            className="h-28 border border-slate-200 bg-white p-5"
+          >
+            <div className="h-3 w-28 bg-slate-100" />
+            <div className="mt-5 h-8 w-14 bg-slate-200" />
+          </div>
+        ))}
+      </div>
+
+      <div className="border border-slate-200 bg-white p-5">
+        <div className="h-5 w-48 bg-slate-200" />
+        <div className="mt-6 space-y-4">
+          {[1, 2, 3, 4, 5].map((item) => (
+            <div
+              key={item}
+              className="h-10 w-full bg-slate-100"
+            />
+          ))}
+        </div>
+      </div>
+
+      <span className="sr-only">
+        Memeriksa sesi dan memuat matriks hak akses.
+      </span>
+    </div>
+  );
+}
+
+export default function RolesPage() {
+  return (
+    <Suspense fallback={<RolesLoading />}>
+      <RolesContent />
+    </Suspense>
   );
 }

@@ -2,8 +2,10 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } fro
 import { AuthGuard, type AuthenticatedRequest } from '../../common/guards/auth.guard.js';
 import { PermissionsGuard } from '../../common/guards/permissions.guard.js';
 import { Roles } from '../../common/decorators/permissions.decorator.js';
+import { RequiredPermissions } from '../../common/access/access.decorator.js';
 import { UsersService } from './users.service.js';
 
+@RequiredPermissions('users.manage')
 @Controller('users')
 @UseGuards(AuthGuard, PermissionsGuard)
 @Roles('SUPER_ADMIN')

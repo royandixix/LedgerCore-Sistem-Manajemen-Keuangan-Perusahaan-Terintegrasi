@@ -809,3 +809,146 @@ textarea {
     transform: none !important;
   }
 }
+
+
+/* LEDGERCORE ELEGANT ACTIONS V11 START */
+
+/* Tombol Tambah UID */
+[data-ledgercore-users-header="notus-v5"]
+button:nth-of-type(1) {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+[data-ledgercore-users-header="notus-v5"]
+button:nth-of-type(1):hover:not(:disabled) {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+
+/* Tombol Undang Pengguna */
+[data-ledgercore-users-header="notus-v5"]
+button:nth-of-type(2) {
+  background: #263b60 !important;
+  color: #ffffff !important;
+  border: 1px solid #263b60 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+[data-ledgercore-users-header="notus-v5"]
+button:nth-of-type(2):hover:not(:disabled) {
+  background: #354e77 !important;
+}
+
+/* Avatar: monokrom */
+[data-ledgercore-users="true"]
+section:has(table) table td:first-child span[aria-hidden="true"],
+[data-ledgercore-users="true"]
+section:has(table) article > div:first-child span[aria-hidden="true"] {
+  background: #eef2f6 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+/* Role: tanpa warna-warni */
+[data-ledgercore-users="true"]
+section:has(table) table td:nth-child(3) > span,
+[data-ledgercore-users="true"]
+section:has(table) article > div:nth-child(2) > span:first-child {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+/* Status: abu-abu */
+[data-ledgercore-users="true"]
+section:has(table) table td:nth-child(4) > span,
+[data-ledgercore-users="true"]
+section:has(table) article > div:nth-child(2) > span:nth-child(2) {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+}
+
+[data-ledgercore-users="true"]
+section:has(table) table td:nth-child(4) > span > span,
+[data-ledgercore-users="true"]
+section:has(table) article > div:nth-child(2) > span:nth-child(2) > span {
+  background: #64748b !important;
+}
+
+/* Salin ID */
+[data-ledgercore-users="true"]
+button[title="Salin UID lengkap"] {
+  color: #2563eb !important;
+  background: transparent !important;
+  border-radius: 4px !important;
+}
+
+[data-ledgercore-users="true"]
+button[title="Salin UID lengkap"]:hover {
+  background: #eff6ff !important;
+}
+
+/* Edit role */
+[data-ledgercore-users="true"]
+button[title="Edit role anggota"] {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #dbeafe !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+[data-ledgercore-users="true"]
+button[title="Edit role anggota"]:hover:not(:disabled) {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+/* Cabut akses */
+[data-ledgercore-users="true"]
+button[title="Cabut keanggotaan (bukan hapus akun)"] {
+  background: #fff1f2 !important;
+  color: #be123c !important;
+  border: 1px solid #ffe4e6 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+[data-ledgercore-users="true"]
+button[title="Cabut keanggotaan (bukan hapus akun)"]:hover:not(:disabled) {
+  background: #ffe4e6 !important;
+  color: #9f1239 !important;
+}
+
+/* Transisi halus dan aksesibilitas */
+[data-ledgercore-users="true"] button {
+  transition:
+    background-color .18s ease,
+    border-color .18s ease,
+    color .18s ease !important;
+}
+
+[data-ledgercore-users="true"] button:focus-visible {
+  outline: 2px solid #2563eb !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ledgercore-users="true"] button {
+    transition: none !important;
+  }
+}
+
+/* LEDGERCORE ELEGANT ACTIONS V11 END */
+
