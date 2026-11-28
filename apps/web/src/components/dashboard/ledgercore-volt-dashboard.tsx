@@ -293,8 +293,6 @@ export default function LedgercoreVoltDashboard({
     area,
     count: allowed.filter((item) => item.area === area).length,
   }));
-  const areaMax = Math.max(1, ...areaData.map((item) => item.count));
-
   async function shareDashboard() {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -731,7 +729,7 @@ export default function LedgercoreVoltDashboard({
                   </div>
                 </section>
 
-                <section className="rounded-[5px] border border-[#e1e7ed] bg-white shadow-[0_8px_18px_rgba(23,43,66,.09)]">
+                <section className="min-w-0 overflow-hidden rounded-[5px] border border-[#e1e7ed] bg-white shadow-[0_8px_18px_rgba(23,43,66,.09)]">
                   <div className="px-5 pt-5">
                     <p className="text-[10px] font-extrabold uppercase tracking-[.08em] text-[#9daabf]">
                       PERFORMANCE
@@ -743,24 +741,35 @@ export default function LedgercoreVoltDashboard({
                       Jumlah modul yang bisa dibuka oleh role aktif
                     </p>
                   </div>
-                  <div className="flex h-[315px] items-end justify-between gap-3 px-5 pb-6 pt-7">
-                    {areaData.map((item, index) => (
+                  <div className="flex h-[260px] min-w-0 items-stretch justify-between gap-2 px-3 pb-5 pt-5 sm:h-[315px] sm:gap-3 sm:px-5 sm:pb-6 sm:pt-7">
+                    {(() => {
+                      const chartMax = Math.max(
+                        1,
+                        ...areaData.map((entry) => entry.count),
+                        ...areaData.map((entry) =>
+                          MODULES.filter(
+                            (module) => module.area === entry.area
+                          ).length
+                        ),
+                      );
+
+                      return areaData.map((item, index) => (
                       <div
                         key={item.area}
-                        className="flex h-full min-w-0 flex-1 flex-col justify-end gap-2"
+                        className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-2"
                       >
-                        <div className="flex h-full items-end justify-center gap-1 border-b border-[#e4e9f2]">
+                        <div className="flex min-h-0 flex-1 items-end justify-center gap-1 overflow-hidden border-b border-[#e4e9f2]">
                           <div
                             className="w-[35%] min-w-[8px] max-w-[27px] rounded-t-sm bg-[#f44196]"
                             style={{
-                              height: `${Math.max(5, (item.count / areaMax) * 90)}%`,
+                              height: `${item.count === 0 ? 0 : Math.min(90, Math.max(4, (item.count / chartMax) * 90))}%`,
                             }}
                             title={`${item.area}: ${item.count} modul`}
                           />
                           <div
                             className="w-[35%] min-w-[8px] max-w-[27px] rounded-t-sm bg-[#5355d9]"
                             style={{
-                              height: `${Math.max(5, (MODULES.filter((m) => m.area === item.area).length / areaMax) * 90)}%`,
+                              height: `${MODULES.filter((m) => m.area === item.area).length === 0 ? 0 : Math.min(90, Math.max(4, (MODULES.filter((m) => m.area === item.area).length / chartMax) * 90))}%`,
                             }}
                             title={`Total platform: ${MODULES.filter((m) => m.area === item.area).length}`}
                           />
@@ -772,7 +781,8 @@ export default function LedgercoreVoltDashboard({
                           {["Admin", "Akun", "Operasi", "Laporan"][index]}
                         </div>
                       </div>
-                    ))}
+                    ));
+                    })()}
                   </div>
                   <div className="flex items-center justify-center gap-4 border-t border-[#edf0f5] px-3 py-3 text-[10px] font-bold text-[#8694aa]">
                     <span>

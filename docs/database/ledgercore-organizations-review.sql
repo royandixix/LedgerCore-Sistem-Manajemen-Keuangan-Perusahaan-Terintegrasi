@@ -30,6 +30,7 @@ CREATE TABLE "organization_members" (
 -- CreateIndex
 CREATE UNIQUE INDEX "organizations_slug_key" ON "organizations"("slug");
 
+
 -- CreateIndex
 CREATE INDEX "organization_members_auth_user_id_idx" ON "organization_members"("auth_user_id");
 
